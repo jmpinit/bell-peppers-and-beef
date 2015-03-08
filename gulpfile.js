@@ -16,7 +16,7 @@ gulp.task('posts', function() {
 
     return Tandem({'body': posts, 'meta': metas})
         .pipe(PostBuilder(postTemplate))
-        .pipe(gulp.dest('www/'));
+        .pipe(gulp.dest('www/post'));
 });
 
 gulp.task('watch', ['posts'], function() {
