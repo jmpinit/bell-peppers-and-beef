@@ -6,6 +6,9 @@ npm-debug.log
 *.swp
 *.swo
 
+# site configuration
+site.json
+
 # source files
 posts/
 

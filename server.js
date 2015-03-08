@@ -5,7 +5,7 @@ console.log(__dirname + '/www');
 app.use(express.static(__dirname + '/www/'));
 app.use(express.logger('dev'));
 
-app.config = require("./config");
+app.config = require("./express-config");
 
 function start() {
 	app.listen(app.config.port);
