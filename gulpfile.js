@@ -24,7 +24,7 @@ gulp.task('watch', ['posts'], function() {
     gulp.watch('templates/*', ['posts']);
 });
 
-gulp.task('serve', ['watch-posts', 'watch-templates'], function () {
+gulp.task('serve', ['watch'], function () {
 	nodemon({
 		script: 'server.js',
 		ext: 'js',
