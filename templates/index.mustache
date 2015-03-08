@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+
+    <title>{{title}}</title>
+    <meta name="description" content="{{description}}">
+    <meta name="author" content="{{author}}">
+</head>
+
+<body>
+    <h1>{{title}}</h1>
+    <h2>{{tagline}}</h2>
+
+    <ul>
+    {{#pagerefs}}
+    <li><a href="{{.}}">{{.}}</a></li>
+    {{/pagerefs}}
+    </ul>
+</body>
+</html>
