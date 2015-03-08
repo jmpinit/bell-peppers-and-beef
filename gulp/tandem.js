@@ -11,10 +11,12 @@ function Tandem(streams) {
 
     this._sources = streams;
     this._buffers = {};
+    this._dry = {};
 
     function endHandler(tandem, name) {
         return function() {
-            tandem._dry = true;
+            tandem._dry[name] = true;
+            tandem._maybePush();
         };
     }
 
@@ -22,15 +24,14 @@ function Tandem(streams) {
         return function() {
             var data = source.read();
 
-            if(data != null) {
-                tandem._buffers[name].push(data);
-                tandem._maybePush();
-            }
+            tandem._buffers[name].push(data);
+            tandem._maybePush();
         }
     }
 
     for(name in this._sources) {
         this._buffers[name] = [];
+        this._dry[name] = false
 
         var src = this._sources[name];
 
@@ -38,6 +39,16 @@ function Tandem(streams) {
         src.on('readable', readableHandler(this, name, src));
     }
 }; util.inherits(Tandem, Readable);
+
+Tandem.prototype._isDry = function() {
+    // is dry if all streams dry
+    for(var name in this._dry) {
+        if(!this._dry[name])
+            return false;
+    }
+
+    return true;
+};
 
 Tandem.prototype._maybeChunk = function() {
     for(name in this._buffers) {
@@ -59,7 +70,7 @@ Tandem.prototype._maybePush = function() {
     var chunk = this._maybeChunk();
 
     if(chunk == null) {
-        if(this._dry) {
+        if(this._isDry()) {
             this.push(null);
         }
     } else {
@@ -69,4 +80,5 @@ Tandem.prototype._maybePush = function() {
 
 Tandem.prototype._read = function() {
     this._maybePush();
-};module.exports = Tandem;
+};
+module.exports = Tandem;
