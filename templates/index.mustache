@@ -14,8 +14,15 @@
 
     <ul>
     {{#pagerefs}}
-    <li><a href="{{.}}">{{.}}</a></li>
+    <li><a href="post/{{.}}">{{.}}</a></li>
     {{/pagerefs}}
     </ul>
+
+    {{#reload}}
+    <script type="text/javascript" src="scripts/reload.js"></script>
+    <script type="text/javascript">
+        reload.watch();
+    </script>
+    {{/reload}}
 </body>
 </html>

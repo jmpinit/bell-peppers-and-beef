@@ -5,6 +5,9 @@ var gulp = require('gulp'),
     tap = require('gulp-tap'),
     through2 = require('through2');
 
+var WebSocketServer = require('ws').Server;
+var reloadServer = new WebSocketServer({ port: 8080 });
+
 var mustache = require('mustache');
 
 var fs = require('fs');
@@ -14,7 +17,11 @@ var File = require('vinyl');
 var PostBuilder = require('./gulp/post-builder');
 var Tandem = require('./gulp/tandem');
 
-var genTasks = ['posts', 'index'];
+var options = {
+    reload: false
+}
+
+var genTasks = ['posts', 'index', 'scripts'];
 
 gulp.task('index', ['posts'], function() {
     var referencer = through2.obj(
@@ -52,6 +59,7 @@ gulp.task('index', ['posts'], function() {
     return Tandem({'template': template, 'pagerefs': hrefs})
         .pipe(through2.obj(function(parts, enc, cb) {
             meta.pagerefs = parts.pagerefs;
+            meta.reload = options.reload;
 
             var render = mustache.render(parts.template, meta);
             this.push(new File({
@@ -73,14 +81,33 @@ gulp.task('posts', function() {
         .pipe(gulp.dest('www/post'));
 });
 
-gulp.task('watch', genTasks, function() {
-    gulp.watch('posts/*', ['posts', 'index']);
-    gulp.watch('templates/post.mustache', ['posts']);
-    gulp.watch('templates/index.mustache', ['index']);
-    gulp.watch('site.json', ['posts', 'index']);
+gulp.task('scripts', function() {
+    return gulp.src('scripts/*.js')
+        .pipe(gulp.dest('www/scripts/'));
 });
 
-gulp.task('serve', ['watch'], function () {
+gulp.task('reload', ['setup-reload', 'posts', 'index'], function() {
+    if(options.reload) {
+        reloadServer.clients.forEach(function each(client) {
+            console.log("sent");
+            client.send("reload");
+        });
+    }
+});
+
+gulp.task('watch', genTasks, function() {
+    gulp.watch('posts/*', ['posts', 'index', 'reload']);
+    gulp.watch('templates/post.mustache', ['posts', 'reload']);
+    gulp.watch('templates/index.mustache', ['index', 'reload']);
+    gulp.watch('scripts/*', ['scripts']);
+    gulp.watch('site.json', ['posts', 'index', 'reload']);
+});
+
+gulp.task('setup-reload', function() {
+    options.reload = true;
+});
+
+gulp.task('serve', ['setup-reload', 'watch'], function () {
 	nodemon({
 		script: 'server.js',
 		ext: 'js',
