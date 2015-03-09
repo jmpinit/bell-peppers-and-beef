@@ -28,7 +28,6 @@ var opts = {
         stylesheets: '_stylesheets',
         posts: '_posts'
     },
-    site: JSON.parse(fs.readFileSync('site.json', 'utf8')),
     reload: true
 }
 
@@ -54,8 +53,8 @@ gulp.task('index', function() {
         }
     );
 
+    var meta = JSON.parse(fs.readFileSync('site.json', 'utf8'));
     var template = fs.createReadStream(opts.loc.templates + '/index.mustache', {encoding: 'utf8'});
-
     var postrefs = gulp.src(opts.loc.posts + '/*.json')
         .pipe(referencer)
         .pipe(intoArray());
