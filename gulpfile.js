@@ -1,5 +1,3 @@
-require("long-stack-traces");
-
 var gulp = require('gulp'),
     gutil = require('gulp-util'),
     nodemon = require('gulp-nodemon'),
@@ -61,9 +59,17 @@ gulp.task('index', function() {
 
     return Tandem({'template': template, 'postrefs': postrefs})
         .pipe(through2.obj(function(parts, enc, cb) {
+            var byDate = function(a, b) {
+                if(new Date(a.meta.date) < new Date(b.meta.date)) return -1;
+                if(new Date(a.meta.date) > new Date(b.meta.date)) return 1;
+                return 0;
+            };
+
             var view = {
-                site: opts.site,
-                posts: parts.postrefs,
+                site: meta,
+                posts: parts.postrefs
+                    .sort(byDate)
+                    .reverse(),
                 reload: opts.reload
             }
 
@@ -86,7 +92,7 @@ gulp.task('posts', function() {
 
     return Tandem({'body': posts, 'meta': metas})
         .pipe(PostBuilder(template))
-        .pipe(gulp.dest('www/post'));
+        .pipe(gulp.dest('www/post/'));
 });
 
 gulp.task('scripts', function() {
@@ -98,11 +104,11 @@ gulp.task('posts-reload', ['posts'], function() { reload(); });
 gulp.task('index-reload', ['index'], function() { reload(); });
 
 gulp.task('watch', genTasks, function() {
-    gulp.watch(opts.loc.posts + '/*', ['posts', 'index', 'reload']);
+    gulp.watch(opts.loc.posts + '/*', ['posts', 'index', 'posts-reload']);
     gulp.watch(opts.loc.templates + '/post.mustache', ['posts', 'posts-reload']);
     gulp.watch(opts.loc.templates + '/index.mustache', ['index', 'index-reload']);
     gulp.watch('scripts/*', ['scripts']);
-    gulp.watch('site.json', ['posts', 'index', 'reload']);
+    gulp.watch('site.json', ['posts', 'index', 'posts-reload', 'index-reload']);
 });
 
 gulp.task('serve', ['watch'], function () {
