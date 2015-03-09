@@ -16,7 +16,7 @@ function PostBuilder(template) {
 }; util.inherits(PostBuilder, Transform);
 
 PostBuilder.prototype._transform = function(files, enc, cb) {
-    var view = JSON.parse(files['meta'].contents);
+    var view = files['meta'];
     view.body = files['body'].contents;
 
     var rendered = mustache.render(this._template, view);

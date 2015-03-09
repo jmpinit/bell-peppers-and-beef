@@ -66,7 +66,7 @@ module.exports = function() {
                 assert[name](fn, meta);
             }
 
-            this.push(file);
+            this.push(meta);
 
             cb();
         }

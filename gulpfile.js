@@ -70,7 +70,7 @@ gulp.task('index', function() {
                 posts: parts.postrefs
                     .sort(byDate)
                     .reverse(),
-                reload: opts.reload
+                opts: opts
             }
 
             var render = mustache.render(parts.template, view);
@@ -86,9 +86,17 @@ gulp.task('index', function() {
 });
 
 gulp.task('posts', function() {
+    var addOptions = through2.obj(function(meta, enc, cb) {
+        meta.opts = opts;
+        this.push(meta);
+        cb();
+    });
+
     var template = fs.readFileSync(opts.loc.templates + '/post.mustache', 'utf8');
     var posts = gulp.src(opts.loc.posts + '/*.md').pipe(markdown());
-    var metas = gulp.src(opts.loc.posts + '/*.json').pipe(validator());
+    var metas = gulp.src(opts.loc.posts + '/*.json')
+        .pipe(validator())
+        .pipe(addOptions);
 
     return Tandem({'body': posts, 'meta': metas})
         .pipe(PostBuilder(template))
