@@ -33,7 +33,7 @@
     <div class="content">
         <h1 class="title">{{site.title}}</h1>
         <h2 class="subtitle">{{site.tagline}}</h2>
-
+        
         <ul>
         {{#posts}}
         <li>[<i class="date">{{meta.date}}</i>] <a href="{{href}}">{{meta.title}}</a></li>
@@ -44,6 +44,7 @@
     {{#reload}}
     <script type="text/javascript" src="scripts/reload.js"></script>
     <script type="text/javascript">
+        reload = new Reload();
         reload.watch();
     </script>
     {{/reload}}
