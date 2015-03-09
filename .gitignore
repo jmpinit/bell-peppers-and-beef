@@ -10,7 +10,9 @@ npm-debug.log
 site.json
 
 # source files
-posts/
+_posts/
+_templates/
+_stylesheets/
 
 # generated files
 www/

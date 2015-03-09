@@ -22,14 +22,20 @@ var PostBuilder = require('./gulp/post-builder');
 var Tandem = require('./gulp/tandem');
 var intoArray = require('./gulp/into-array');
 
-var options = {
+var opts = {
+    loc: {
+        templates: '_templates',
+        stylesheets: '_stylesheets',
+        posts: '_posts'
+    },
+    site: JSON.parse(fs.readFileSync('site.json', 'utf8')),
     reload: true
 }
 
 var genTasks = ['posts', 'index', 'scripts'];
 
 function reload() {
-    if(options.reload) {
+    if(opts.reload) {
         reloadServer.clients.forEach(function each(client) {
             client.send("reload");
         });
@@ -48,20 +54,18 @@ gulp.task('index', function() {
         }
     );
 
-    var template = fs.createReadStream('templates/index.mustache', {encoding: 'utf8'});
+    var template = fs.createReadStream(opts.loc.templates + '/index.mustache', {encoding: 'utf8'});
 
-    var postrefs = gulp.src('posts/*.json')
+    var postrefs = gulp.src(opts.loc.posts + '/*.json')
         .pipe(referencer)
         .pipe(intoArray());
 
-    var meta = JSON.parse(fs.readFileSync('site.json', 'utf8'));
-
-    return (new Tandem({'template': template, 'postrefs': postrefs}))
+    return Tandem({'template': template, 'postrefs': postrefs})
         .pipe(through2.obj(function(parts, enc, cb) {
             var view = {
-                site: meta,
+                site: opts.site,
                 posts: parts.postrefs,
-                reload: options.reload
+                reload: opts.reload
             }
 
             var render = mustache.render(parts.template, view);
@@ -77,9 +81,9 @@ gulp.task('index', function() {
 });
 
 gulp.task('posts', function() {
-    var template = fs.readFileSync('templates/post.mustache', 'utf8');
-    var posts = gulp.src('posts/*.md').pipe(markdown());
-    var metas = gulp.src('posts/*.json').pipe(validator);
+    var template = fs.readFileSync(opts.loc.templates + '/post.mustache', 'utf8');
+    var posts = gulp.src(opts.loc.posts + '/*.md').pipe(markdown());
+    var metas = gulp.src(opts.loc.posts + '/*.json').pipe(validator);
 
     return Tandem({'body': posts, 'meta': metas})
         .pipe(PostBuilder(template))
@@ -95,9 +99,9 @@ gulp.task('posts-reload', ['posts'], function() { reload(); });
 gulp.task('index-reload', ['index'], function() { reload(); });
 
 gulp.task('watch', genTasks, function() {
-    gulp.watch('posts/*', ['posts', 'index', 'reload']);
-    gulp.watch('templates/post.mustache', ['posts', 'posts-reload']);
-    gulp.watch('templates/index.mustache', ['index', 'index-reload']);
+    gulp.watch(opts.loc.posts + '/*', ['posts', 'index', 'reload']);
+    gulp.watch(opts.loc.templates + '/post.mustache', ['posts', 'posts-reload']);
+    gulp.watch(opts.loc.templates + '/index.mustache', ['index', 'index-reload']);
     gulp.watch('scripts/*', ['scripts']);
     gulp.watch('site.json', ['posts', 'index', 'reload']);
 });
