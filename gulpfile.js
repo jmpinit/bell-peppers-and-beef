@@ -14,6 +14,7 @@ var fs = require('fs');
 var path = require('path');
 var File = require('vinyl');
 
+var validator = require('./gulp/meta-linter')
 var PostBuilder = require('./gulp/post-builder');
 var Tandem = require('./gulp/tandem');
 
@@ -74,7 +75,7 @@ gulp.task('index', ['posts'], function() {
 gulp.task('posts', function() {
     var template = fs.readFileSync('templates/post.mustache', 'utf8');
     var posts = gulp.src('posts/*.md').pipe(markdown());
-    var metas = gulp.src('posts/*.json');
+    var metas = gulp.src('posts/*.json').pipe(validator);
 
     return Tandem({'body': posts, 'meta': metas})
         .pipe(PostBuilder(template))
@@ -89,7 +90,6 @@ gulp.task('scripts', function() {
 gulp.task('reload', ['setup-reload', 'posts', 'index'], function() {
     if(options.reload) {
         reloadServer.clients.forEach(function each(client) {
-            console.log("sent");
             client.send("reload");
         });
     }
