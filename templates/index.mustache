@@ -3,20 +3,43 @@
 <head>
     <meta charset="utf-8">
 
-    <title>{{title}}</title>
-    <meta name="description" content="{{description}}">
-    <meta name="author" content="{{author}}">
+    <title>{{site.title}}</title>
+    <meta name="description" content="{{site.description}}">
+    <meta name="author" content="{{site.author}}">
+
+    <style>
+        .content {
+            width: 50%;
+            margin: 0 auto;
+        }
+
+        h1.title {
+            text-decoration: underline;
+            margin-bottom: 0;
+        }
+
+        h2.subtitle {
+            font-size: medium;
+            margin-top: 0;
+        }
+
+        i.date {
+            color: #999;
+        }
+    </style>
 </head>
 
 <body>
-    <h1>{{title}}</h1>
-    <h2>{{tagline}}</h2>
+    <div class="content">
+        <h1 class="title">{{site.title}}</h1>
+        <h2 class="subtitle">{{site.tagline}}</h2>
 
-    <ul>
-    {{#pagerefs}}
-    <li><a href="post/{{.}}">{{.}}</a></li>
-    {{/pagerefs}}
-    </ul>
+        <ul>
+        {{#posts}}
+        <li>[<i class="date">{{meta.date}}</i>] <a href="{{href}}">{{meta.title}}</a></li>
+        {{/posts}}
+        </ul>
+    </div>
 
     {{#reload}}
     <script type="text/javascript" src="scripts/reload.js"></script>

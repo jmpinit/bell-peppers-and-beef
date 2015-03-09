@@ -1,4 +1,7 @@
+require("long-stack-traces");
+
 var gulp = require('gulp'),
+    gutil = require('gulp-util'),
     nodemon = require('gulp-nodemon'),
     rename = require('gulp-rename'),
     markdown = require('gulp-markdown')
@@ -17,56 +20,57 @@ var File = require('vinyl');
 var validator = require('./gulp/meta-linter')
 var PostBuilder = require('./gulp/post-builder');
 var Tandem = require('./gulp/tandem');
+var intoArray = require('./gulp/into-array');
 
 var options = {
-    reload: false
+    reload: true
 }
 
 var genTasks = ['posts', 'index', 'scripts'];
 
-gulp.task('index', ['posts'], function() {
+function reload() {
+    if(options.reload) {
+        reloadServer.clients.forEach(function each(client) {
+            client.send("reload");
+        });
+    }
+}
+
+gulp.task('index', function() {
+    // collects info needed for post list entries
     var referencer = through2.obj(
         function(file, enc, cb) {
-            var href = path.basename(file.path);
-            this.push(href);
+            this.push({
+                meta: JSON.parse(file.contents),
+                href: '/post/' + gutil.replaceExtension(path.basename(file.path), '.html')
+            });
             cb();
         }
     );
-
-    var intoArray = through2.obj(
-        function(chunk, enc, cb) {
-            if(this._arr === undefined) this._arr = [];
-            this._arr.push(chunk);
-            cb();
-        },
-        function(cb) {
-            this.push(this._arr);
-            cb();
-        }
-    );
-
-    var toString = through2.obj(
-        function(chunk, enc, cb) { this.push(JSON.stringify(chunk)); cb(); }
-    )
 
     var template = fs.createReadStream('templates/index.mustache', {encoding: 'utf8'});
 
-    var hrefs = gulp.src('www/post/*.html')
+    var postrefs = gulp.src('posts/*.json')
         .pipe(referencer)
-        .pipe(intoArray);
+        .pipe(intoArray());
 
     var meta = JSON.parse(fs.readFileSync('site.json', 'utf8'));
 
-    return Tandem({'template': template, 'pagerefs': hrefs})
+    return (new Tandem({'template': template, 'postrefs': postrefs}))
         .pipe(through2.obj(function(parts, enc, cb) {
-            meta.pagerefs = parts.pagerefs;
-            meta.reload = options.reload;
+            var view = {
+                site: meta,
+                posts: parts.postrefs,
+                reload: options.reload
+            }
 
-            var render = mustache.render(parts.template, meta);
+            var render = mustache.render(parts.template, view);
+
             this.push(new File({
                 cwd: '.', base: '.', path: '.',
                 contents: new Buffer(render)
             }));
+
             cb();
         }))
         .pipe(gulp.dest('www/index.html'));
@@ -87,28 +91,19 @@ gulp.task('scripts', function() {
         .pipe(gulp.dest('www/scripts/'));
 });
 
-gulp.task('reload', ['setup-reload', 'posts', 'index'], function() {
-    if(options.reload) {
-        reloadServer.clients.forEach(function each(client) {
-            client.send("reload");
-        });
-    }
-});
+gulp.task('posts-reload', ['posts'], function() { reload(); });
+gulp.task('index-reload', ['index'], function() { reload(); });
 
 gulp.task('watch', genTasks, function() {
     gulp.watch('posts/*', ['posts', 'index', 'reload']);
-    gulp.watch('templates/post.mustache', ['posts', 'reload']);
-    gulp.watch('templates/index.mustache', ['index', 'reload']);
+    gulp.watch('templates/post.mustache', ['posts', 'posts-reload']);
+    gulp.watch('templates/index.mustache', ['index', 'index-reload']);
     gulp.watch('scripts/*', ['scripts']);
     gulp.watch('site.json', ['posts', 'index', 'reload']);
 });
 
-gulp.task('setup-reload', function() {
-    options.reload = true;
-});
-
-gulp.task('serve', ['setup-reload', 'watch'], function () {
-	nodemon({
+gulp.task('serve', ['watch'], function () {
+    nodemon({
 		script: 'server.js',
 		ext: 'js',
 		env: {
