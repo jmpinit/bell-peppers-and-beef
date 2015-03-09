@@ -83,7 +83,7 @@ gulp.task('index', function() {
 gulp.task('posts', function() {
     var template = fs.readFileSync(opts.loc.templates + '/post.mustache', 'utf8');
     var posts = gulp.src(opts.loc.posts + '/*.md').pipe(markdown());
-    var metas = gulp.src(opts.loc.posts + '/*.json').pipe(validator);
+    var metas = gulp.src(opts.loc.posts + '/*.json').pipe(validator());
 
     return Tandem({'body': posts, 'meta': metas})
         .pipe(PostBuilder(template))

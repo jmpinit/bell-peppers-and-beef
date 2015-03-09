@@ -51,20 +51,24 @@ var assert = {
     }
 }
 
-module.exports = through2.obj(
-    function(file, enc, cb) {
-        var fn = path.basename(file.path);
+module.exports = function() {
+    return through2.obj(
+        function(file, enc, cb) {
+            var fn = path.basename(file.path);
 
-        try {
-            var meta = JSON.parse(file.contents);
-        } catch(e) {
-            fatal('parsing failed: ' + e);
+            try {
+                var meta = JSON.parse(file.contents);
+            } catch(e) {
+                fatal(fn, 'parsing failed: ' + e);
+            }
+
+            for(name in assert) {
+                assert[name](fn, meta);
+            }
+
+            this.push(file);
+
+            cb();
         }
-
-        for(name in assert) {
-            assert[name](fn, meta);
-        }
-
-        cb();
-    }
-);
+    );
+}
