@@ -15,7 +15,7 @@ var fs = require('fs');
 var path = require('path');
 var File = require('vinyl');
 
-var validator = require('./gulp/meta-linter')
+var validator = require('./gulp/meta-linter');
 var PostBuilder = require('./gulp/post-builder');
 var Tandem = require('./gulp/tandem');
 var intoArray = require('./gulp/into-array');
@@ -26,10 +26,10 @@ var opts = {
         stylesheets: '_stylesheets',
         posts: '_posts'
     },
-    reload: true
+    reload: true 
 }
 
-var genTasks = ['posts', 'index', 'scripts'];
+var buildTasks = ['posts', 'index', 'scripts'];
 
 function reload() {
     if(opts.reload) {
@@ -111,13 +111,15 @@ gulp.task('scripts', function() {
 gulp.task('posts-reload', ['posts'], function() { reload(); });
 gulp.task('index-reload', ['index'], function() { reload(); });
 
-gulp.task('watch', genTasks, function() {
+gulp.task('watch', buildTasks, function() {
     gulp.watch(opts.loc.posts + '/*', ['posts', 'index', 'posts-reload']);
     gulp.watch(opts.loc.templates + '/post.mustache', ['posts', 'posts-reload']);
     gulp.watch(opts.loc.templates + '/index.mustache', ['index', 'index-reload']);
     gulp.watch('scripts/*', ['scripts']);
     gulp.watch('site.json', ['posts', 'index', 'posts-reload', 'index-reload']);
 });
+
+gulp.task('build', buildTasks, function() {});
 
 gulp.task('serve', ['watch'], function () {
     nodemon({
@@ -130,3 +132,5 @@ gulp.task('serve', ['watch'], function () {
 		watch: ['server.js']
 	});
 });
+
+gulp.task('default', ['build'], function() { process.exit(0); });
