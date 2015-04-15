@@ -6,8 +6,8 @@ npm-debug.log
 *.swp
 *.swo
 
-# site configuration
-site.json
+# blog configuration
+blog-config.json
 
 # source files
 _posts/
