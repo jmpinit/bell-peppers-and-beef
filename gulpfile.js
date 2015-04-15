@@ -11,6 +11,8 @@ var reloadServer = new WebSocketServer({ port: 8080 });
 
 var mustache = require('mustache');
 
+var exec = require('child_process').exec;
+var os = require('os');
 var fs = require('fs');
 var path = require('path');
 var File = require('vinyl');
@@ -130,3 +132,25 @@ gulp.task('serve', ['watch'], function () {
 		watch: ['server.js']
 	});
 });
+
+gulp.task('archive', genTasks, function() {
+    var sources = [
+        'site.json',
+        opts.loc.posts, opts.loc.templates, opts.loc.stylesheets,
+    ];
+
+    if(os.type() === 'Windows_NT') {
+        exec('7z a site-archive.zip ' + sources.join(' '),
+            function(error, stdout, stderr) {
+                console.log('stdout: ' + stdout);
+                console.log('stderr: ' + stderr);
+
+                if (error !== null) {
+                    console.log('exec error: ' + error);
+                }
+            }
+        );
+    } else {
+        console.log("archive task not implemented for " + os.type());
+    }
+})
